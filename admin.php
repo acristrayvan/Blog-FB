@@ -9,7 +9,7 @@
 	<title> !!!Best blog ever!!!</title>
 </head>
 <body>
-	<h1> Best blog ever best application </h1>
+	<h1> Best blog ever best application </h1>  
 	
 	<form method="post" action="inc/update.inc.php">
 		<fieldset>
