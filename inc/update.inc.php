@@ -14,10 +14,10 @@ if($_SERVER['REQUEST_METHOD']=='POST'
 	print_r($_FILES);
 	echo "</pre>";
 	exit;
-	//Include database credentials and connect to database
+	//Include database credentials and connect to database.
 	include_once 'db.inc.php';
 	$db = new PDO(DB_INFO,DB_USER,DB_PASS);
-	//Edit an existing entry
+	//Edit an existing entry.
 	if(!empty($_POST['id']))
 	{
 		$sql = "UPDATE entries
@@ -35,10 +35,10 @@ if($_SERVER['REQUEST_METHOD']=='POST'
 		);
 		$stmt->closeCursor();
 	}
-	//Create a new entry
+	//Create a new entry.
 	else
 	{
-	//Save the entry into the database
+	//Save the entry into the database.
 	$sql = "INSERT INTO entries(page,title,entry,url) VALUES (?,?,?,?)";
 	$stmt = $db->prepare($sql);
 	$stmt->execute(
