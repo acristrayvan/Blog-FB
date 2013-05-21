@@ -4,6 +4,8 @@
 	 */
 	include_once 'inc/functions.inc.php';
 	include_once 'inc/db.inc.php';
+	//include_once 'inc/images.inc.php';
+	//include_once 'admin.php';
 	//Open a database connection
 	$db = new PDO(DB_INFO,DB_USER,DB_PASS);
 	//Determine if an entry ID was passed in the URL
@@ -41,7 +43,7 @@
 <head>
 	<meta http-equiv="Content-Type"
 		content="text/html;charset=utf-8" />
-	<link rel="stylesheet" href="css/default.css" type="text/css" />
+	<link rel="stylesheet" href="/simple_blog/css/default.css" type="text/css" />
 	<title> Simple Blog </title>
 </head>
 <body>

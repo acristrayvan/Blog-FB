@@ -1,6 +1,8 @@
 <?php 
 	include_once 'inc/functions.inc.php';
 	include_once 'inc/db.inc.php';
+	include_once 'inc/images.inc.php';
+	//include_once 'inc/update.inc.php';
 	//Open a database connection
 
 	$db = new PDO(DB_INFO,DB_USER,DB_PASS);
@@ -65,7 +67,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-	<link rel="stylesheet" href="css/default.css" type="text/css" />
+	<link rel="stylesheet" href="/simple_blog/css/default.css" type="text/css" />
 	<title> !!!Best blog ever!!!</title>
 </head>
 <body>
@@ -79,7 +81,7 @@
 ?>
 	<form method="post" 
 		action="/simple_blog/inc/update.inc.php" 
-		enctype="/multipart/form-data">
+		enctype="multipart/form-data">
 		<fieldset>
 			<legend><?php echo $legend ?></legend>
 			<label>Title
