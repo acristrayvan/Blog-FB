@@ -68,10 +68,10 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 	<link rel="stylesheet" href="/simple_blog/css/default.css" type="text/css" />
-	<title> !!!Best blog ever!!!</title>
+	<title> My first blog</title>
 </head>
 <body>
-	<h1> Best blog ever best application </h1>
+	<h1> My first blog </h1>
 <?php 
 	if($page == 'delete'):
 	{

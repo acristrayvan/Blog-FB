@@ -4,7 +4,7 @@
 	 */
 	include_once 'inc/functions.inc.php';
 	include_once 'inc/db.inc.php';
-	//include_once 'inc/images.inc.php';
+	include_once 'inc/images.inc.php';
 	//include_once 'admin.php';
 	//Open a database connection
 	$db = new PDO(DB_INFO,DB_USER,DB_PASS);
@@ -62,17 +62,19 @@ if($fulldisp==1)
 	$url = (isset($url)) ? $url : $e['url'];
 	//Build the admin links
 	$admin = adminLinks($page, $url);
+	//Format the image if one exists
+	$img = formatImage($e['image'],$e['title']);
 ?>
-	<h2> <?php echo $e['title']?> </h2>
-	<p> <?php echo $e['entry']?> </p>
-	<p>
-		<?php echo $admin['edit']?>
-		<?php if($page=='blog')echo $admin['delete'] ?>
-	</p>
-	<?php  if($page=='blog'): ?>
-	<p class="backlink">
-		<a href="./">Back to Latest Entries</a>
-	</p>
+		<h2> <?php echo $e['title']?> </h2>
+		<p> <?php echo $img,$e['entry']?> </p>
+		<p>
+			<?php echo $admin['edit']?>
+			<?php if($page=='blog')echo $admin['delete'] ?>
+		</p>
+		<?php  if($page=='blog'): ?>
+		<p class="backlink">
+			<a href="./">Back to Latest Entries</a>
+		</p>
 <?php endif;
 }//End the if statement
 //If the full display flag is 0.... 

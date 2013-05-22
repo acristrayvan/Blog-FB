@@ -4,7 +4,7 @@ function retrieveEntries($db,$page,$url=NULL)
 	//if an entry ID was supplied,load the associated entry
 	if(isset($url))
 	{
-		$sql="SELECT id,page,title,entry
+		$sql="SELECT id,page,title,image,entry
 			  FROM entries
 			  WHERE url=?
 			  LIMIT 1";
@@ -18,7 +18,7 @@ function retrieveEntries($db,$page,$url=NULL)
 	//If no entry URL was supplied,load all entry titles
 	else 
 	{
-		$sql = "SELECT id,page,title,entry,url
+		$sql = "SELECT id,page,title,image,entry,url
 				FROM entries
 				Where page=?
 				ORDER BY created DESC";
@@ -100,10 +100,22 @@ function makeUrl($title)
 		$replacements = array('-','');
 		return preg_replace($patterns,$replacements,strtolower($title));
 }
+function formatImage($img=NULL, $alt=NULL)
+		{
+		if(isset($img))
+		{
+			return '<img src="'.$img.'" alt="'.$alt.'" />';
+		}
+		else 
+			{
+			return NULL;
+			}
+	}
 function confirmDelete($db,$url)
 {
 	$e = retrieveEntries($db,'',$url);
 	return <<<FORM
+
 <form action="/simple_blog/admin.php" method="post">
 	<fieldset>
 		<legend>Are you sure?</legend>
