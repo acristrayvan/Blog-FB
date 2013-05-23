@@ -4,7 +4,7 @@ function retrieveEntries($db,$page,$url=NULL)
 	//if an entry ID was supplied,load the associated entry
 	if(isset($url))
 	{
-		$sql="SELECT id,page,title,image,entry
+		$sql="SELECT id,page,title,image,entry,created
 			  FROM entries
 			  WHERE url=?
 			  LIMIT 1";
@@ -18,7 +18,7 @@ function retrieveEntries($db,$page,$url=NULL)
 	//If no entry URL was supplied,load all entry titles
 	else 
 	{
-		$sql = "SELECT id,page,title,image,entry,url
+		$sql = "SELECT id,page,title,image,entry,url,created
 				FROM entries
 				Where page=?
 				ORDER BY created DESC";
@@ -70,12 +70,12 @@ function deleteEntry($db,$url)
 }
 function adminLinks($page,$url)
 {
- $editURL = "/simple_blog/admin/$page/$url";
- $deleteURL = "/simple_blog/admin/delete/$url";
+ 	$editURL = "/simple_blog/admin/$page/$url";
+ 	$deleteURL = "/simple_blog/admin/delete/$url";
  
- $admin['edit'] = "<a href=\"$editURL\">edit</a>";
- $admin['delete'] = "<a href=\"$deleteURL\">delete</a>";
- return $admin;
+ 	$admin['edit'] = "<a href=\"$editURL\">edit</a>";
+ 	$admin['delete'] = "<a href=\"$deleteURL\">delete</a>";
+ 	return $admin;
 }
 function sanitizeData($data)
 {
@@ -122,7 +122,7 @@ function confirmDelete($db,$url)
 		<p>Are you sure you want to delete the entry "$e[title]"?</p>
 		<input type="submit" name = "submit" value = "Yes" />
 		<input type="submit" name = "submit" value = "No" />
-		<input type="submit" name = "action" value = "delete" />
+		<input type="hidden" name = "action" value = "delete" />
 		<input type="hidden" name = "url" value="$url" />
 	</fieldset>
 </form>

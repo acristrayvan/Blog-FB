@@ -44,6 +44,9 @@
 	<meta http-equiv="Content-Type"
 		content="text/html;charset=utf-8" />
 	<link rel="stylesheet" href="/simple_blog/css/default.css" type="text/css" />
+	<link rel="alternate" type="application/rss+xml"
+		title="My Simple Blog - RSS 2.0"
+		href="/simple_blog/feeds/rss.php" />
 	<title> Simple Blog </title>
 </head>
 <body>
@@ -64,9 +67,21 @@ if($fulldisp==1)
 	$admin = adminLinks($page, $url);
 	//Format the image if one exists
 	$img = formatImage($e['image'],$e['title']);
+	if($page=='blog')
+	{
+		//Load the comment object
+		include_once 'inc/comments.inc.php';
+		$comments = new Comments();
+		$comment_disp = $comments->showComments($e['id']);
+		$comment_form = $comments->showCommentForm($e['id']);
+	}
+	else 
+	{
+		$comment_form = NULL;
+	}
 ?>
 		<h2> <?php echo $e['title']?> </h2>
-		<p> <?php echo $img,$e['entry']?> </p>
+		<p> <?php echo $img, $e['entry'] ?> </p>
 		<p>
 			<?php echo $admin['edit']?>
 			<?php if($page=='blog')echo $admin['delete'] ?>
@@ -75,7 +90,9 @@ if($fulldisp==1)
 		<p class="backlink">
 			<a href="./">Back to Latest Entries</a>
 		</p>
-<?php endif;
+		<h3> Comments for This Entry </h3>
+		<?php echo $comment_disp, $comment_form; endif; ?>
+<?php
 }//End the if statement
 //If the full display flag is 0.... 
 else{
@@ -92,8 +109,17 @@ else{
 }//End the else	
 ?>
 		<p class="backlink">
+		<?php if($page=='blog'): ?>
 			<a href="/simple_blog/admin/<?php echo $page ?>">
 				Post a New Entry
 			</a>
+		<?php endif; ?>
+		</p>
+		<p>
+			<a href="/simple_blog/feeds/rss.php">
+				Subscribe via RSS!
+			</a>
 		</p>
 	</div>
+</body>
+</html>
