@@ -1,5 +1,7 @@
 <?php 
 include_once 'db.inc.php';
+include_once 'functions.inc.php';
+//include_once '../index.php';
 class Comments
 {
 	//Database connection
@@ -14,21 +16,47 @@ class Comments
 	}
 	//Display a form for users to enter new comments with
 	public function showCommentForm($blog_id)
-	{
+	{	
+		$errors = array(
+			1 => '<p class="error">Something went wrong while'
+				. 'saving your comment. Please try again!</p>',
+			2 => '<p class="error">Please provide a valid '
+				. 'email address!</p>',
+			3 =>  '<p class="error">Please answer the anti-spam '
+                 . 'question correctly!</p>'
+				);
+		if(isset($_SESSION['error']))
+		{
+			$error = $errors[$_SESSION['error']];
+		}
+		else 
+		{
+			$error = NULL;
+		}
+		// Check if session variables exist
+		$n = isset($_SESSION['n']) ? $_SESSION['n'] : NULL;
+		$e = isset($_SESSION['e']) ? $_SESSION['e'] : NULL;
+		$c = isset($_SESSION['c']) ? $_SESSION['c'] : NULL;
+		
+		// Generate a challenge question
+		$challenge = $this->generateChallenge();
+		
 		return <<<FORM
 <form action="/simple_blog/inc/update.inc.php"
 	method="post" id="comment-form">
 	<fieldset>
-		<legend>Post a Comment</legend>
+		<legend>Post a Comment</legend>$error
 		<label>Name
-			<input type="text" name="name" maxlength="75" />
+			<input type="text" name="name" maxlength="75"
+				value="$n" />
 		</label>
 		<label>Email
-			<input type="text" email="email" maxlength="150" />
+			<input type="text" name="email" maxlength="150"
+				value="$e" />
 		</label>
 		<label>Comment
-			<textarea rows="10" cols="45" name="comment"></textarea>
-		</label>
+			<textarea rows="10" cols="45" name="comment">$c</textarea>
+		</label>$challenge
 		<input type="hidden" name="blog_id" value="$blog_id" />
 		<input type="submit" name="submit" value="Post Comment" />
 		<input type="submit" name="submit" value="Cancel" />
@@ -37,32 +65,64 @@ class Comments
 FORM;
 	}
 	//Save comments to the database
-	public function saveComment($p)
+// Save comments to the database
+
+public function saveComment($p)
+ {
+  // Save the comment information in a session
+	$_SESSION['n'] = $p['name'];
+	$_SESSION['e'] = $p['email'];
+	$_SESSION['c'] = $p['comment'];
+
+  // Make sure the email address is valid first
+  if($this->validateEmail($p['email'])===FALSE)
+  {
+   $_SESSION['error'] = 2;
+   return;
+  }
+  // Make sure the challenge question was properly answered
+  if(!$this->verifyResponse($p['s_q'], $p['s_1'], $p['s_2']))
+  {
+   $_SESSION['error'] = 3;
+   return;
+  }
+
+  // Sanitize the data and store in variables
+  $blog_id = htmlentities(strip_tags($p['blog_id']),
+    ENT_QUOTES);
+  $name = htmlentities(strip_tags($p['name']), ENT_QUOTES);
+  $email = htmlentities(strip_tags($p['email']), ENT_QUOTES);
+  $comment = htmlentities(strip_tags($p['comment']),
+    ENT_QUOTES);
+  // Generate an SQL command
+  $sql = "INSERT INTO comments (blog_id, name, email, comment)
+    	  VALUES (?, ?, ?, ?)";
+  if($stmt = $this->db->prepare($sql))
+  {
+   // Execute the command, free used memory, and return true
+   $stmt->execute(array($blog_id, $name, $email, $comment));
+   $stmt->closeCursor();
+   // Destroy the comment information to empty the form
+   // Destroy the comment information to empty the form
+	unset($_SESSION['n'], $_SESSION['e'], $_SESSION['c'],
+		$_SESSION['error']);
+	return;
+  }
+  else
+  {
+   // If something went wrong
+   $_SESSION['error'] = 1;
+   return;
+  }
+ }
+	private function validateEmail($email)
 	{
-		//Sanitize the data and store in variables
-		$blog_id = htmlentities(strip_tags($p['blog_id']),ENT_QUOTES);
-		$name = htmlentities(strip_tags($p['name']),ENT_QUOTES);
-		$email = htmlentities(strip_tags($p['email']),ENT_QUOTES);
-		$comment = htmlentities(strip_tags($p['comment']),ENT_QUOTES);
-		//Keep formatting of comments and remove extra whitespaces
-		//$comment = nl2br(trim($comments));
-		//Generate and prepare the SQL command
-		$sql = "INSERT INTO comments(blog_id,name,email,comment)
-				VALUES (?,?,?,?)";
-		if($stmt = $this->db->prepare($sql))
-		{
-			//Execute the command,free used memory ,and return true
-			$stmt->execute(array($blog_id, $name, $email, $comment));
-			$stmt->closeCursor();
-			return TRUE;
-		}
-		else 
-		{
-			//IF something went wrong ,return false
-			return FALSE;
-		}
+		// Matches valid email addresses
+		$p = '/^[\w-]+(\.[\w-]+)*@[a-z0-9-]+'
+			.'(\.[a-z0-9-]+)*(\.[a-z]{2,4})$/i';
+		// If a match is found, return TRUE, otherwise return FALSE
+		return (preg_match($p, $email)) ? TRUE : FALSE;
 	}
-	//Removes the comment corresponding to $id from the database
 	public function deleteComment($id)
 	{
 		$sql = "DELETE FROM comments
@@ -126,21 +186,56 @@ FORM;
 				//Generate a byline and delete link for each comment
 				$byline = "<span><strong>$c[name]</strong>
 							[Posted on $date]</span>";
+				if(isset($_SESSION['loggedin'])
+						&& $_SESSION['loggedin'] == 1)
+				{
 				//Generate delete link for the comment display
-				$admin = "<a href=\"/simple_blog/inc/update.inc.php
-	?action=comment_delete&id=$c[id]\" class=\"admin\">delete</a>";
+				$admin = "<a href=\"/simple_blog/inc/update.inc.php"
+							. "?action=comment_delete&id=$c[id]\""
+			 				. " class=\"admin\">delete</a>";
 	 		}
 	 		else
 	 		{//If no comments exist,set$byline &admin to NULL
-	 			$byline = NULL;
+	 			//$byline = NULL;
 	 			$admin = NULL;
 	 		}
+	 	}
+	 	else
+	 	{
+	 		//If no comments exist,set $byline & $admin to null
+	 		$byline = NULL;
+	 		$admin = NULL;
+	 	}
 	 		//Assemble the pieces into a formatted comment
 	 		$display .= "
 	 <p class=\"comment\">$byline$c[comment]$admin</p>";
 	 	}
 	 	//Return all the formatted comments as a string
 	 	return $display;
+	 }
+	 private function generateChallenge()
+	 {
+	 	// Store two random numbers in an array
+	 	$numbers = array(mt_rand(1,4), mt_rand(1,4));
+	 	// Store the correct answer in a session
+	 	$_SESSION['challenge'] = $numbers[0] + $numbers[1];
+	 	// Convert the numbers to their ASCII codes
+	 	$converted = array_map('ord', $numbers);
+	 	// Generate a math question as HTML markup
+	 	return "
+	 	<label>&#87;&#104;&#97;&#116;&#32;&#105;&#115;&#32;
+	 	&#$converted[0];&#32;&#43;&#32;&#$converted[1];&#63;
+	 	<input type=\"text\" name=\"s_q\" />
+	 	</label>";
+	 	
+	 }
+	 private function verifyResponse($resp)
+	 {
+	 	// Grab the session value and destroy it
+	 	$val = $_SESSION['challenge'];
+	 	unset($_SESSION['challenge']);
+	 	// Returns TRUE if equal, FALSE otherwise
+	 	return $resp==$val;
 	 }
 	 public function confirmDelete($id)
 	 {

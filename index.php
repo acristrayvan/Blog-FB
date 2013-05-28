@@ -1,10 +1,11 @@
 <?php 
+	session_start();
 	/*
 	 * Include the necessary files
 	 */
 	include_once 'inc/functions.inc.php';
 	include_once 'inc/db.inc.php';
-	include_once 'inc/images.inc.php';
+	//include_once 'inc/images.inc.php';
 	//include_once 'admin.php';
 	//Open a database connection
 	$db = new PDO(DB_INFO,DB_USER,DB_PASS);
@@ -55,6 +56,13 @@
 		<li><a href="/simple_blog/blog/">Blog</a></li>
 		<li><a href="/simple_blog/about/">About the Author</a></li>
 	</ul>
+<?php if(isset($_SESSION['loggedin']) && $_SESSION['loggedin']==1): ?>
+	<p id="control_panel">
+		You are logged in!
+		<a href="/simple_blog/inc/update.inc.php?action=logout">Log
+			out</a>.
+	</p>
+<?php endif; ?>
 	<div id="entries">
 <?php
 // Format the entries from the database
@@ -63,8 +71,15 @@ if($fulldisp==1)
 {
 	//Get the URL if one wasn`t passed
 	$url = (isset($url)) ? $url : $e['url'];
-	//Build the admin links
-	$admin = adminLinks($page, $url);
+	if(isset($_SESSION['loggedin']) && $_SESSION['loggedin'] == 1)
+	{
+		//Build the admin links
+		$admin = adminLinks($page, $url);
+	}
+	else
+	{
+		$admin = array('edit'=>NULL,'delete'=>NULL);
+	}
 	//Format the image if one exists
 	$img = formatImage($e['image'],$e['title']);
 	if($page=='blog')
@@ -74,10 +89,13 @@ if($fulldisp==1)
 		$comments = new Comments();
 		$comment_disp = $comments->showComments($e['id']);
 		$comment_form = $comments->showCommentForm($e['id']);
+		// Generate a Post to Twitter link
+		$twitter = postToTwitter($e['title']);
 	}
 	else 
 	{
 		$comment_form = NULL;
+		$twitter = NULL;
 	}
 ?>
 		<h2> <?php echo $e['title']?> </h2>
@@ -88,6 +106,7 @@ if($fulldisp==1)
 		</p>
 		<?php  if($page=='blog'): ?>
 		<p class="backlink">
+			<a href="<?php echo $twitter ?>">Post to Twitter</a><br />
 			<a href="./">Back to Latest Entries</a>
 		</p>
 		<h3> Comments for This Entry </h3>
@@ -109,12 +128,18 @@ else{
 }//End the else	
 ?>
 		<p class="backlink">
-		<?php if($page=='blog'): ?>
+<?php 
+if($page=='blog'
+	&& isset($_SESSION['loggedin'])
+	&& $_SESSION['loggedin'] == 1):
+?>
 			<a href="/simple_blog/admin/<?php echo $page ?>">
 				Post a New Entry
 			</a>
-		<?php endif; ?>
+<?php endif; ?>
 		</p>
+		
+		
 		<p>
 			<a href="/simple_blog/feeds/rss.php">
 				Subscribe via RSS!

@@ -1,8 +1,10 @@
 <?php
+session_start();
 include_once 'functions.inc.php';
 //Include the image handling class
 include_once 'images.inc.php';
 include_once 'db.inc.php';
+include_once 'comments.inc.php';
 //include_once '../admin.php';
 if($_SERVER['REQUEST_METHOD']=='POST'
 	&& $_POST['submit']=='Save Entry'
@@ -77,6 +79,7 @@ if($_SERVER['REQUEST_METHOD']=='POST'
 					$img_path,
 					$_POST['entry'],
 					$url)
+
 			
 	);
 	$stmt->closeCursor();
@@ -97,8 +100,8 @@ else if($_SERVER['REQUEST_METHOD'] == 'POST'
 	include_once 'comments.inc.php';
 	$comments = new Comments();
 	//Save the comment
-	if($comments->saveComment($_POST))
-	{
+	$comments->saveComment($_POST);
+	//{
 		//If available,store the entry the user came from
 		if(isset($_SERVER['HTTP_REFERER']))
 		{
@@ -111,12 +114,9 @@ else if($_SERVER['REQUEST_METHOD'] == 'POST'
 		//Send the user back to the entry
 		header('Location: '.$loc);
 		exit;
-	}
+	//}
 	//If saving fails,output an error message
-	else 
-	{
-		exit('Something went wrong while saving the comment.');
-	}
+	
 }
 else if($_GET['action'] == 'comment_delete')
 {
@@ -157,8 +157,61 @@ else if($_SERVER['REQUEST_METHOD'] == 'POST'
 		exit;
 	}
 }
+// If a user is trying to log in, check it here
+else if($_SERVER['REQUEST_METHOD'] == 'POST'
+		&& $_POST['action'] == 'login'
+		&& !empty($_POST['username'])
+		&& !empty($_POST['password']))
+{
+	// Include database credentials and connect to the database
+	include_once 'db.inc.php';
+	$db = new PDO(DB_INFO, DB_USER, DB_PASS);
+	$sql = "SELECT COUNT(*) AS num_users
+			FROM admin
+			WHERE username=?
+			AND password=SHA1(?)";
+	$stmt = $db->prepare($sql);
+	$stmt->execute(array($_POST['username'], $_POST['password']));
+	$response = $stmt->fetch();
+	if($response['num_users'] > 0)
+	{
+		$_SESSION['loggedin'] = 1;
+	}
+	else
+	{
+		$_SESSION['loggedin'] = NULL;
+	}
+	header('Location: /simple_blog/');
+	exit;
+	}
+//If an admin is being created ,save it here
+else if($_SERVER['REQUEST_METHOD'] == 'POST'
+	&& $_POST['action'] == 'createuser'
+	&& !empty($_POST['username'])
+	&& !empty($_POST['password']))
+{
+	//Include database credentials and connect to the database
+	include_once ' db.inc.php';
+	$db = new PDO(DB_INFO,DB_USER,DB_PASS);
+	$sql = "INSERT INTO admin (username,password)
+			VALUES(?, SHA1(?))";
+	$stmt = $db->prepare($sql);
+	$stmt->execute(array($_POST['username'],$_POST['password']));
+	header('Location: /simple_blog/');
+	exit;
+}
+
+// If the user has chosen to log out, process it here
+else if($_GET['action'] == 'logout')
+{
+	session_destroy();
+	header('Location: ../');
+	exit;
+}
 else 
 {
+	unset($_SESSION['c_name'], $_SESSION['c_email'],
+			$_SESSION['c_comment'], $_SESSION['error']);
 	header('Location: ../');
 	exit;
 }
